@@ -1,12 +1,14 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:background/Data/apiURLs.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:background_location/background_location.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class MapTScreen extends StatefulWidget {
   List lanLat;
@@ -20,7 +22,6 @@ class MapTScreen extends StatefulWidget {
 
 class _MapTScreenState extends State<MapTScreen> {
   Future<void> _initBackgroundLocation() async {
-    print('++++++++++++++++++++++++++++++++++++++++++++++');
     // Request location permissions
     var status = await Permission.location.request();
     if (status.isGranted) {
@@ -34,12 +35,9 @@ class _MapTScreenState extends State<MapTScreen> {
 
       BackgroundLocation.getLocationUpdates((location) {
         if (locationTimer == null) {
-          print('++++++++++++++');
           const Duration interval = Duration(seconds: 30);
           locationTimer = Timer.periodic(interval, (Timer timer) {
             // sendDelegateStatusApi(location);
-            print('=======================');
-            print('Location: ${location.latitude}, ${location.longitude}');
 
             // Handle the location updates here.
           });
@@ -50,7 +48,6 @@ class _MapTScreenState extends State<MapTScreen> {
       BackgroundLocation.startLocationService();
     } else {
       // Permission denied. Handle accordingly.
-      print('Location permission denied.');
     }
   }
 
@@ -90,10 +87,10 @@ class _MapTScreenState extends State<MapTScreen> {
       cl = await Geolocator.getCurrentPosition();
       marker.add(Marker(
         draggable: true,
-        markerId: MarkerId('1'),
+        markerId: const MarkerId('1'),
         position: LatLng(cl.latitude, cl.longitude),
         icon: await BitmapDescriptor.fromAssetImage(
-          ImageConfiguration(size: Size(12, 12)),
+          const ImageConfiguration(size: Size(12, 12)),
           // Adjust the size as needed
           'image/bus.png',
         ),
@@ -148,13 +145,12 @@ class _MapTScreenState extends State<MapTScreen> {
   }
 
   static Future<bool> sendDelegateStatusApi(Location locationDto) async {
-    String tt =
-        'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySUQiOiJNYTN5a3pObWlDS2wzZlIvU0lVd3N3PT0iLCJyb2xlIjoiQnVzIiwibmJmIjoxNzAxNDU1NDg0LCJleHAiOjE3MDE1NTI2ODQsImlhdCI6MTcwMTQ1NTQ4NH0.yrWnBh-K7qFOlj7greu_asw1GA095orMI75eEwdAC5I';
-
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String token = prefs.getString('token')!;
     Map<String, String> headers = {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
-      'Authorization': tt,
+      'Authorization': 'Bearer ' + token,
     };
 
     dynamic body = jsonEncode({
@@ -162,21 +158,12 @@ class _MapTScreenState extends State<MapTScreen> {
       'Longitude': locationDto.longitude,
     });
 
-    //print("FGS: LOCSEND: Sending Location: $body, token: $token");
 
-    final response = await http.post(
-        Uri.http(
-            "abnaleizischoolbuses-env.eba-2qsps2xf.eu-central-1.elasticbeanstalk.com",
-            "/api/BusLocation/PostBusLocation"),
-        headers: headers,
-        body: body);
-    print("FGS: LOCSEND: RESPONSE CODE: " + response.statusCode.toString());
-    print("FGS: LOCSEND: RESPONSE BODY: " + response.body);
+    final response =
+        await http.post(ApiURLs.postBusLocation, headers: headers, body: body);
     if (response.statusCode == 200) {
-      print("FGS: LOCSEND: SEND Status Success");
       return true;
     } else {
-      print("FGS: LOCSEND: SEND Status Fail");
       return false;
     }
   }
@@ -199,8 +186,8 @@ class _MapTScreenState extends State<MapTScreen> {
   void initState() {
     getPosition();
     _initBackgroundLocation();
-    getPolyline();
-    addStopMarker();
+    //getPolyline();
+    //addStopMarker();
     super.initState();
   }
 
@@ -234,7 +221,6 @@ class _MapTScreenState extends State<MapTScreen> {
                       child: CircularProgressIndicator(),
                     ),
             ),
-
           ],
         ),
       ),

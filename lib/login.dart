@@ -1,12 +1,12 @@
 import 'dart:convert';
 
+import 'package:background/Data/apiURLs.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'home.dart';
 
-class Api {}
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -15,11 +15,10 @@ class LoginScreen extends StatefulWidget {
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
-String URL =
-    'abnaleizischoolbuses-env.eba-2qsps2xf.eu-central-1.elasticbeanstalk.com';
+
 
 Future<bool> LoginFun(BuildContext context,String Username, String Password) async {
-  Response response = await post(Uri.http(URL, '/api/shared/LogInBus'),
+  Response response = await post(ApiURLs.logInBus,
       headers: {'Content-Type': 'application/json'},
       body: json.encode({
         "Username": Username,
@@ -27,10 +26,8 @@ Future<bool> LoginFun(BuildContext context,String Username, String Password) asy
         "BusNumber": "",
         "PhoneNumber": ""
       }));
-  print(response.body);
   if (response.statusCode == 200) {
     Map<String, dynamic> data = json.decode(response.body);
-    print(data['token']);
 
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setString('token', data['token']);
@@ -39,7 +36,6 @@ Future<bool> LoginFun(BuildContext context,String Username, String Password) asy
     ));
     return true;
   } else {
-    print('=================Error==================================');
     return false;
   }
 }

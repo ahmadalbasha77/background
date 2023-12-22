@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:background/Data/apiURLs.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -18,24 +19,15 @@ class _HomeScreenState extends State<HomeScreen> {
   Map<String, dynamic>? busData;
 
   static Future<Map<String, dynamic>?> GetBus() async {
-    String tt =
-        'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySUQiOiJNYTN5a3pObWlDS2wzZlIvU0lVd3N3PT0iLCJyb2xlIjoiQnVzIiwibmJmIjoxNzAxNDU1NDg0LCJleHAiOjE3MDE1NTI2ODQsImlhdCI6MTcwMTQ1NTQ4NH0.yrWnBh-K7qFOlj7greu_asw1GA095orMI75eEwdAC5I';
 
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String token = prefs.getString('token')!;
-    print('==============================================');
-    print(token);
-    print('==============================================');
 
-    Response response = await get(Uri.http(URL, '/api/Bus/GetBusData'),
-        headers: {'Authorization': tt});
-    print(response.body);
+    Response response = await get(ApiURLs.getBusData,
+        headers: {'Authorization': 'Bearer ' + token});
     if (response.statusCode == 200) {
-      print('****************200*****************************************');
       return json.decode(response.body);
     } else {
-      print(response.statusCode);
-      print('lllll');
       return null;
     }
   }
@@ -43,6 +35,9 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> fetchData() async {
     var data = await GetBus();
     if (data != null) {
+      print("===============================================");
+      print(data.toString());
+      print("===============================================");
       setState(() {
         busData = data;
       });
@@ -60,15 +55,15 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Home'),
+        title: const Text('Home'),
         centerTitle: true,
       ),
       body: SingleChildScrollView(
         child: busData == null
-            ? CircularProgressIndicator()
+            ? const CircularProgressIndicator()
             : Column(children: [
                 Container(
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     border: Border(
                         right: BorderSide.none,
                         left: BorderSide.none,
@@ -76,42 +71,27 @@ class _HomeScreenState extends State<HomeScreen> {
                         bottom: BorderSide(color: Colors.black26)),
                   ),
                   child: ListTile(
-                    title: Text('Name : ', style: TextStyle(fontSize: 20)),
+                    title: const Text('Name : ', style: TextStyle(fontSize: 20)),
                     subtitle: Text(busData?['username'],
                         style: TextStyle(fontSize: 17)),
                   ),
                 ),
+                // Container(
+                //   decoration: const BoxDecoration(
+                //     border: Border(
+                //         right: BorderSide.none,
+                //         left: BorderSide.none,
+                //         top: BorderSide(color: Colors.black26),
+                //         bottom: BorderSide(color: Colors.black26)),
+                //   ),
+                //   child: ListTile(
+                //     title: const Text('ID number : ', style: TextStyle(fontSize: 20)),
+                //     subtitle: Text(busData?['busNumberA'],
+                //         style: const TextStyle(fontSize: 17)),
+                //   ),
+                // ),
                 Container(
-                  decoration: BoxDecoration(
-                    border: Border(
-                        right: BorderSide.none,
-                        left: BorderSide.none,
-                        top: BorderSide(color: Colors.black26),
-                        bottom: BorderSide(color: Colors.black26)),
-                  ),
-                  child: ListTile(
-                    title: Text('ID number : ', style: TextStyle(fontSize: 20)),
-                    subtitle: Text(busData?['busNumberA'],
-                        style: TextStyle(fontSize: 17)),
-                  ),
-                ),
-                Container(
-                  decoration: BoxDecoration(
-                    border: Border(
-                        right: BorderSide.none,
-                        left: BorderSide.none,
-                        top: BorderSide(color: Colors.black26),
-                        bottom: BorderSide(color: Colors.black26)),
-                  ),
-                  child: ListTile(
-                    title:
-                        Text('Vehicle ID : ', style: TextStyle(fontSize: 20)),
-                    subtitle: Text(busData?['busNumberB'],
-                        style: TextStyle(fontSize: 17)),
-                  ),
-                ),
-                Container(
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     border: Border(
                         right: BorderSide.none,
                         left: BorderSide.none,
@@ -120,13 +100,28 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   child: ListTile(
                     title:
-                        Text('Phone number : ', style: TextStyle(fontSize: 20)),
+                        const Text('Vehicle ID : ', style: TextStyle(fontSize: 20)),
+                    subtitle: Text(busData?['busNumberA'] + '-' + busData?['busNumberB'],
+                        style: const TextStyle(fontSize: 17)),
+                  ),
+                ),
+                Container(
+                  decoration: const BoxDecoration(
+                    border: Border(
+                        right: BorderSide.none,
+                        left: BorderSide.none,
+                        top: BorderSide(color: Colors.black26),
+                        bottom: BorderSide(color: Colors.black26)),
+                  ),
+                  child: ListTile(
+                    title:
+                        const Text('Phone number : ', style: TextStyle(fontSize: 20)),
                     subtitle: Text(busData?['phoneNumber'],
-                        style: TextStyle(fontSize: 17)),
+                        style: const TextStyle(fontSize: 17)),
                   ),
                 ),
                 Container(
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     border: Border(
                         right: BorderSide.none,
                         left: BorderSide.none,
@@ -134,15 +129,15 @@ class _HomeScreenState extends State<HomeScreen> {
                         bottom: BorderSide(color: Colors.black26)),
                   ),
                   child: ListTile(
-                    title: Text('Working hours : ',
+                    title: const Text('Working hours : ',
                         style: TextStyle(fontSize: 20)),
                     subtitle: Text(
-                        '${busData?['workingHoursStart'].toString()} - ${busData?['workingHoursEnd'].toString()}',
-                        style: TextStyle(fontSize: 17)),
+                        '${extractTimeFromIsoString(busData?['workingHoursStart'].toString())} - ${extractTimeFromIsoString(busData?['workingHoursEnd'].toString())}',
+                        style: const TextStyle(fontSize: 17)),
                   ),
                 ),
                 Container(
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     border: Border(
                         right: BorderSide.none,
                         left: BorderSide.none,
@@ -150,13 +145,13 @@ class _HomeScreenState extends State<HomeScreen> {
                         bottom: BorderSide(color: Colors.black26)),
                   ),
                   child: ListTile(
-                    title: Text('Line name : ', style: TextStyle(fontSize: 20)),
+                    title: const Text('Line name : ', style: TextStyle(fontSize: 20)),
                     subtitle: Text(busData?['lineName'],
-                        style: TextStyle(fontSize: 17)),
+                        style: const TextStyle(fontSize: 17)),
                   ),
                 ),
                 Container(
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     border: Border(
                         right: BorderSide.none,
                         left: BorderSide.none,
@@ -164,13 +159,13 @@ class _HomeScreenState extends State<HomeScreen> {
                         bottom: BorderSide(color: Colors.black26)),
                   ),
                   child: ListTile(
-                    title: Text('Tracking : ', style: TextStyle(fontSize: 20)),
+                    title: const Text('Tracking : ', style: TextStyle(fontSize: 20)),
                     subtitle: Text('',
                         style:
                             TextStyle(fontSize: 17, color: Colors.green[700])),
                   ),
                 ),
-                SizedBox(
+                const SizedBox(
                   height: 70,
                 ),
                 Container(
@@ -178,7 +173,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   height: 55,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Color.fromRGBO(49, 44, 61, 1.0),
+                      backgroundColor: const Color.fromRGBO(49, 44, 61, 1.0),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(25),
                       ),
@@ -191,7 +186,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ));
                     },
-                    child: Text(
+                    child: const Text(
                       "Show line",
                       style: TextStyle(color: Colors.white, fontSize: 18),
                     ),
@@ -201,4 +196,15 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
+
+
+  String extractTimeFromIsoString(String? isoString) {
+  // Parse ISO 8601 string to DateTime
+  DateTime dateTime = DateTime.parse(isoString!);
+
+  // Format DateTime to time string
+  String timeString = "${dateTime.hour}:${dateTime.minute}:${dateTime.second}";
+
+  return timeString;
+}
 }
